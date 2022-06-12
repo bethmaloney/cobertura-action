@@ -13,6 +13,7 @@ const core = require("@actions/core");
  * @return {Promise<{total: number, line: number, files: T[], branch: number}>}
  */
 async function readCoverageFromFile(path, options) {
+  core.info(`Reading file: ${path}`);
   const xml = await fs.readFile(path, "utf-8");
   const { coverage } = await parseString(xml, {
     explicitArray: false,
