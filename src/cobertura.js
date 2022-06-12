@@ -3,7 +3,6 @@ const xml2js = require("xml2js");
 const util = require("util");
 const glob = require("glob-promise");
 const parseString = util.promisify(xml2js.parseString);
-const core = require("@actions/core");
 
 /**
  * generate the report for the given file
@@ -13,7 +12,6 @@ const core = require("@actions/core");
  * @return {Promise<{total: number, line: number, files: T[], branch: number}>}
  */
 async function readCoverageFromFile(path, options) {
-  core.info(`Reading file: ${path}`);
   const xml = await fs.readFile(path, "utf-8");
   const { coverage } = await parseString(xml, {
     explicitArray: false,
@@ -43,8 +41,6 @@ function getWorkingDirectory() {
 }
 
 function trimFileName(fileName, workingDirectory, options) {
-  core.info(`workingDirectory: ${workingDirectory}; fileName: ${fileName}; normalize: ${options.normalizeAbsolutePaths}`);
-
   if (!options.normalizeAbsolutePaths) {
     return fileName;
   }
