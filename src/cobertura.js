@@ -3,6 +3,7 @@ const xml2js = require("xml2js");
 const util = require("util");
 const glob = require("glob-promise");
 const parseString = util.promisify(xml2js.parseString);
+const core = require("@actions/core");
 
 /**
  * generate the report for the given file
@@ -41,6 +42,8 @@ function getWorkingDirectory() {
 }
 
 function trimFileName(fileName, workingDirectory, options) {
+  core.info(`workingDirectory: ${workingDirectory}; fileName: ${fileName}; normalize: ${options.normalizeAbsolutePaths}`);
+
   if (!options.normalizeAbsolutePaths) {
     return fileName;
   }
