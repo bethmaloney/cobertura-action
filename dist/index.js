@@ -18544,7 +18544,7 @@ async function readCoverageFromFile(path, options) {
 }
 
 function getWorkingDirectory() {
-  return process.env["GITHUB_WORKSPACE"] ?? process.cwd();
+  return process.env["GITHUB_WORKSPACE"] || process.cwd();
 }
 
 function trimFileName(fileName, workingDirectory, options) {
