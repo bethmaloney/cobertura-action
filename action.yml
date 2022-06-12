@@ -62,7 +62,7 @@ inputs:
   normalize_absolute_paths:
     description: 'Transform absolute paths of tests to relative paths to allow for linking against files in the repository'
     required: false
-    default: false
+    default: true
 runs:
   using: 'node12'
   main: 'dist/index.js'
