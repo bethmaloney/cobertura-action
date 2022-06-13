@@ -18216,6 +18216,7 @@ async function action(payload) {
   const reports = await processCoverage(path, {
     skipCovered,
     normalizeAbsolutePaths,
+    prependSourceFolder
   });
   const comment = markdownReport(reports, commit, {
     minimumCoverage,
@@ -18227,8 +18228,7 @@ async function action(payload) {
     linkMissingLines,
     linkMissingLinesSourceDir,
     filteredFiles: changedFiles,
-    reportName,
-    prependSourceFolder
+    reportName
   });
 
   const belowThreshold = reports.some(
