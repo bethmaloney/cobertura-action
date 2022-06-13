@@ -18207,6 +18207,7 @@ async function action(payload) {
   const normalizeAbsolutePaths = core.getBooleanInput(
     "normalize_absolute_paths"
   );
+  const prependSourceFolder = core.getBooleanInput("prepend_source_folder")
 
   const changedFiles = onlyChangedFiles
     ? await listChangedFiles(pullRequestNumber)
@@ -18227,6 +18228,7 @@ async function action(payload) {
     linkMissingLinesSourceDir,
     filteredFiles: changedFiles,
     reportName,
+    prependSourceFolder
   });
 
   const belowThreshold = reports.some(
@@ -18508,7 +18510,7 @@ const xml2js = __nccwpck_require__(6189);
 const util = __nccwpck_require__(1669);
 const glob = __nccwpck_require__(8252);
 const parseString = util.promisify(xml2js.parseString);
-const core = __nccwpck_require__(2186);
+const path = __nccwpck_require__(5622);
 
 /**
  * generate the report for the given file
@@ -18518,7 +18520,6 @@ const core = __nccwpck_require__(2186);
  * @return {Promise<{total: number, line: number, files: T[], branch: number}>}
  */
 async function readCoverageFromFile(path, options) {
-  core.info(`Reading file: ${path}`);
   const xml = await fs.readFile(path, "utf-8");
   const { coverage } = await parseString(xml, {
     explicitArray: false,
@@ -18526,12 +18527,13 @@ async function readCoverageFromFile(path, options) {
   });
   const { packages } = coverage;
   const classes = processPackages(packages);
+
   const files = classes
     .filter(Boolean)
     .map((klass) => {
       return {
         ...calculateRates(klass),
-        filename: trimFileName(klass["filename"], getWorkingDirectory(), options),
+        filename: processFilename(klass, coverage, options),
         name: klass["name"],
         missing: missingLines(klass),
       };
@@ -18543,13 +18545,26 @@ async function readCoverageFromFile(path, options) {
   };
 }
 
+function processFilename(classCoverage, coverage, options) {
+  let fileName = classCoverage["filename"];
+
+  if (options.prependSourceFolder && !path.isAbsolute(fileName)) {
+    const pathPrefix = getPathPrefix(coverage);
+    fileName = path.join(pathPrefix,fileName);
+  }
+
+  return trimFileName(
+    fileName,
+    getWorkingDirectory(),
+    options
+  );
+}
+
 function getWorkingDirectory() {
   return process.env["GITHUB_WORKSPACE"] || process.cwd();
 }
 
 function trimFileName(fileName, workingDirectory, options) {
-  core.info(`workingDirectory: ${workingDirectory}; fileName: ${fileName}; normalize: ${options.normalizeAbsolutePaths}`);
-
   if (!options.normalizeAbsolutePaths) {
     return fileName;
   }
@@ -18557,7 +18572,7 @@ function trimFileName(fileName, workingDirectory, options) {
   if (fileName.indexOf(workingDirectory) === 0) {
     var trimmedFilename = fileName.substring(workingDirectory.length);
 
-    if(trimmedFilename[0] === "/") {
+    if (trimmedFilename[0] === "/") {
       return trimmedFilename.substring(1);
     }
 
@@ -18565,6 +18580,14 @@ function trimFileName(fileName, workingDirectory, options) {
   }
 
   return fileName;
+}
+
+function getPathPrefix(coverage) {
+  if (coverage.sources && coverage.sources.source instanceof Array) {
+    return coverage.sources.source[0];
+  }
+
+  return coverage.sources.source || "";
 }
 
 function trimFolder(path, positionOfFirstDiff) {
@@ -18727,7 +18750,7 @@ module.exports = {
   processCoverage,
   trimFolder,
   longestCommonPrefix,
-  trimFileName
+  trimFileName,
 };
 
 
