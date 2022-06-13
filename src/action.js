@@ -53,6 +53,7 @@ async function action(payload) {
   const normalizeAbsolutePaths = core.getBooleanInput(
     "normalize_absolute_paths"
   );
+  const prependSourceFolder = core.getBooleanInput("prepend_source_folder")
 
   const changedFiles = onlyChangedFiles
     ? await listChangedFiles(pullRequestNumber)
@@ -61,6 +62,7 @@ async function action(payload) {
   const reports = await processCoverage(path, {
     skipCovered,
     normalizeAbsolutePaths,
+    prependSourceFolder
   });
   const comment = markdownReport(reports, commit, {
     minimumCoverage,
@@ -72,7 +74,7 @@ async function action(payload) {
     linkMissingLines,
     linkMissingLinesSourceDir,
     filteredFiles: changedFiles,
-    reportName,
+    reportName
   });
 
   const belowThreshold = reports.some(
